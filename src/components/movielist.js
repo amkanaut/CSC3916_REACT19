@@ -7,7 +7,7 @@ import { BsStarFill } from 'react-icons/bs';
 
 function MovieList() {
     const dispatch = useDispatch();
-    const movies = useSelector(state => state.movie.movies);
+    const movies = useSelector(state => state.movie?.movies || []);
 
     // Memoize the movies array
     const memoizedMovies = useMemo(() => {
@@ -20,7 +20,9 @@ function MovieList() {
 
     const handleSelect = (selectedIndex) => {
         // Use memoizedMovies here
-        dispatch(setMovie(memoizedMovies[selectedIndex]));
+        if (movies && movies[selectedIndex]) {
+          dispatch(setMovie(movies[selectedIndex]));
+        }
     };
 
     const handleClick = (movie) => {
@@ -38,7 +40,7 @@ function MovieList() {
               {/* Use Nav.Link with "as={Link}" to avoid nested anchors */}
               <Nav.Link
                 as={Link}
-                to={`/movie/${movie._id}`}
+                to={`/movie/${movie.title}`}
                 onClick={() => handleClick(movie)}
               >
                 <Image className="image" src={movie.imageUrl} thumbnail />

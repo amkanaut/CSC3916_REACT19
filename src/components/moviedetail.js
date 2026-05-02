@@ -1,70 +1,116 @@
-import React, { useEffect } from 'react';
-import { fetchMovie } from '../actions/movieActions';
+import React, { useEffect, useState } from 'react';
+import { fetchMovie, postReview } from '../actions/movieActions'; // [x] Added postReview here!
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, ListGroup, ListGroupItem, Image } from 'react-bootstrap';
+import { Card, ListGroup, ListGroupItem, Image, Form, Button } from 'react-bootstrap';
 import { BsStarFill } from 'react-icons/bs';
-import { useParams } from 'react-router-dom'; // Import useParams
+import { useParams } from 'react-router-dom';
 
 const MovieDetail = () => {
   const dispatch = useDispatch();
-  const { movieId } = useParams(); // Get movieId from URL parameters
+  const { movieTitle } = useParams(); 
   const selectedMovie = useSelector(state => state.movie.selectedMovie);
-  const loading = useSelector(state => state.movie.loading); // Assuming you have a loading state in your reducer
-  const error = useSelector(state => state.movie.error); // Assuming you have an error state in your reducer
+  const loading = useSelector(state => state.movie.loading); 
+  const error = useSelector(state => state.movie.error); 
+  const [review, setReview] = useState('');
+  const [rating, setRating] = useState(5);
 
-
-  useEffect(() => {
-    dispatch(fetchMovie(movieId));
-  }, [dispatch, movieId]);
-
-  const DetailInfo = () => {
-    if (loading) {
-      return <div>Loading....</div>;
-    }
-
-    if (error) {
-      return <div>Error: {error}</div>;
-    }
-
-    if (!selectedMovie) {
-      return <div>No movie data available.</div>;
-    }
-
-    return (
-      <Card className="bg-dark text-dark p-4 rounded">
-        <Card.Header>Movie Detail</Card.Header>
-        <Card.Body>
-          <Image className="image" src={selectedMovie.imageUrl} thumbnail />
-        </Card.Body>
-        <ListGroup>
-          <ListGroupItem>{selectedMovie.title}</ListGroupItem>
-          <ListGroupItem>
-            {selectedMovie.actors.map((actor, i) => (
-              <p key={i}>
-                <b>{actor.actorName}</b> {actor.characterName}
-              </p>
-            ))}
-          </ListGroupItem>
-          <ListGroupItem>
-            <h4>
-              <BsStarFill /> {selectedMovie.avgRating}
-            </h4>
-          </ListGroupItem>
-        </ListGroup>
-        <Card.Body className="card-body bg-white">
-          {selectedMovie.reviews.map((review, i) => (
-            <p key={i}>
-              <b>{review.username}</b>&nbsp; {review.review} &nbsp; <BsStarFill />{' '}
-              {review.rating}
-            </p>
-          ))}
-        </Card.Body>
-      </Card>
-    );
+  const onSubmit = (e) => {
+    e.preventDefault();
+    const reviewData = {
+        movieId: selectedMovie._id,
+        title: selectedMovie.title, // Backend uses this to link the review
+        review: review,
+        rating: rating
+    };
+    dispatch(postReview(reviewData));
+    setReview(''); // Clear the form after submit
   };
 
-  return <DetailInfo />;
-};
+  useEffect(() => {
+    dispatch(fetchMovie(movieTitle));
+  }, [dispatch, movieTitle]);
+
+  if (loading) {
+    return <div>Loading....</div>;
+  }
+
+  if (error) {
+    return <div className="text-danger mt-5 text-center">Error: {error.message || error.toString()}</div>;
+  }
+
+  if (!selectedMovie) {
+    return <div>No movie data available.</div>;
+  }
+
+    return (
+      // [x] Wrapped both cards in a single parent div!
+      <div> 
+        {/* TOP CARD: Movie Details & Existing Reviews */}
+        <Card className="bg-dark text-white p-4 rounded mb-4">
+          <Card.Header>Movie Detail</Card.Header>
+          <Card.Body>
+            <Image className="image" src={selectedMovie.imageUrl} thumbnail style={{ maxWidth: '300px' }} />
+          </Card.Body>
+          <ListGroup className="text-dark">
+            <ListGroupItem><h2>{selectedMovie.title}</h2></ListGroupItem>
+            <ListGroupItem>
+              {/* Added optional chaining (?.) just in case actors array is empty */}
+              {selectedMovie.actors?.map((actor, i) => (
+                <p key={i} className="mb-1">
+                  <b>{actor.actorName}</b> as {actor.characterName}
+                </p>
+              ))}
+            </ListGroupItem>
+            <ListGroupItem>
+              <h4>
+                <BsStarFill style={{ color: 'gold' }}/> {selectedMovie.avgRating ? Number(selectedMovie.avgRating).toFixed(1) : "N/A"}
+              </h4>
+            </ListGroupItem>
+          </ListGroup>
+          <Card.Body className="card-body bg-white text-dark mt-3 rounded">
+            <h5>User Reviews</h5>
+            {/* Added optional chaining (?.) here too */}
+            {selectedMovie.reviews?.length > 0 ? (
+                selectedMovie.reviews.map((review, i) => (
+                <div key={i} className="border-bottom mb-2 pb-2">
+                    <b>{review.username}</b> &nbsp; 
+                    <span className="text-warning"><BsStarFill /> {review.rating}</span>
+                    <p className="mb-0 mt-1">"{review.review}"</p>
+                </div>
+                ))
+            ) : (
+                <p>No reviews yet. Be the first!</p>
+            )}
+          </Card.Body>
+        </Card>
+
+        {/* BOTTOM CARD: The Add Review Form */}
+        <Card className="bg-light text-dark p-3">
+          <h4>Add a Review</h4>
+          <Form onSubmit={onSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>Rating</Form.Label>
+              <Form.Select value={rating} onChange={(e) => setRating(e.target.value)}>
+                {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n} Stars</option>)}
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Review</Form.Label>
+              <Form.Control 
+                as="textarea" 
+                rows={3} 
+                value={review} 
+                onChange={(e) => setReview(e.target.value)} 
+                placeholder="What did you think of the movie?"
+                required
+              />
+            </Form.Group>
+            <Button variant="primary" type="submit">Submit Review</Button>
+          </Form>
+        </Card>
+      </div>
+    );
+  };
 
 
 export default MovieDetail;

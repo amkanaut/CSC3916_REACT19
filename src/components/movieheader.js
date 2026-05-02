@@ -24,7 +24,7 @@ function MovieHeader() {
                     <Nav.Link as={NavLink} to="/movielist" disabled={!loggedIn}> 
                         Movie List
                     </Nav.Link>
-                    <Nav.Link as={NavLink} to={'/movie/' + (selectedMovie? selectedMovie._id: '')} disabled={!loggedIn}>
+                    <Nav.Link as={NavLink} to={`/movie/${selectedMovie?.title || ''}`} disabled={!loggedIn || !selectedMovie}>
                         Movie Detail
                     </Nav.Link>
                     <Nav.Link as={NavLink} to="/signin"> 

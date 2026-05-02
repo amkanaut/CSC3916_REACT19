@@ -31,12 +31,12 @@ export function setMovie(movie) {
 
 export function fetchMovie(movieTitle) {
     return dispatch => {
-        return fetch(`${env.REACT_APP_API_URL}/movies/${encodeURIComponent(movieTitle)}?reviews=true`, {
+        return fetch(`${env.REACT_APP_API_URL}/movies/${movieTitle}?reviews=true`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': localStorage.getItem('token')
             },
             mode: 'cors'
         }).then((response) => {
@@ -45,7 +45,6 @@ export function fetchMovie(movieTitle) {
             }
             return response.json()
         }).then((res) => {
-            console.log("fetchMovie response:", res);
             dispatch(movieFetched(res));
         }).catch((e) => console.log(e));
     }
@@ -53,12 +52,12 @@ export function fetchMovie(movieTitle) {
 
 export function fetchMovies() {
     return dispatch => {
-        return fetch(`${env.REACT_APP_API_URL}/movies?reviews=true`, {
+        return fetch(`${env.REACT_APP_API_URL}/movies/?reviews=true`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': localStorage.getItem('token')
             },
             mode: 'cors'
         }).then((response) => {
@@ -67,7 +66,6 @@ export function fetchMovies() {
             }
             return response.json()
         }).then((res) => {
-            console.log("fetchMovies response:", res);
             dispatch(moviesFetched(res));
         }).catch((e) => console.log(e));
     }
@@ -80,7 +78,7 @@ export function postReview(reviewData) {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': localStorage.getItem('token') 
             },
             body: JSON.stringify(reviewData),
             mode: 'cors'
